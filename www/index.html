@@ -1,184 +1,425 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Convertisseur de devises</title>
-  <style>
-    * { box-sizing: border-box; }
-    body {
-      margin: 0; min-height: 100vh; padding: 16px;
-      font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-      background: #f1f5f9;
-      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px;
-    }
-    .card { background: #fff; width: 100%; max-width: 420px; padding: 24px; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,.08); }
-    h1 { font-size: 1.3rem; text-align: center; margin: 0 0 12px; color: #0f172a; }
-    h2 { font-size: 1.05rem; margin: 0 0 8px; color: #0f172a; display: flex; justify-content: space-between; align-items: center; }
-    label { display: block; font-size: .85rem; color: #475569; margin: 12px 0 4px; }
-    input, select { width: 100%; padding: 10px 12px; font-size: 1rem; border: 1px solid #cbd5e1; border-radius: 10px; background: #fff; }
-    .row { display: flex; gap: 8px; align-items: flex-end; }
-    .row > div { flex: 1; min-width: 0; }
-    #swap { border: none; background: #e2e8f0; border-radius: 10px; padding: 10px 12px; cursor: pointer; font-size: 1.1rem; }
-    .result { margin-top: 20px; padding: 16px; background: #eff6ff; border-radius: 12px; text-align: center; }
-    .result strong { font-size: 1.6rem; color: #1d4ed8; display: block; margin-top: 4px; }
-    .rate, .updated { margin-top: 8px; font-size: .8rem; color: #64748b; text-align: center; }
-    .badge { background: linear-gradient(90deg, #facc15, #f59e0b); color: #1e293b; font-size: .7rem; font-weight: 800; padding: 4px 10px; border-radius: 999px; }
-    .hidden { display: none !important; }
-    .lock-text { font-size: .9rem; color: #475569; margin: 0 0 4px; }
-    .btn { display: block; width: 100%; padding: 11px; border: none; border-radius: 10px; font-size: .95rem; font-weight: 600; cursor: pointer; text-align: center; text-decoration: none; margin-top: 10px; }
-    .btn-pay { background: #facc15; color: #1e293b; }
-    .btn-main { background: #1d4ed8; color: #fff; }
-    .btn-light { background: #e2e8f0; color: #1e293b; }
-    .code-row { display: flex; gap: 8px; }
-    .code-row input { flex: 1; min-width: 0; }
-    .code-row .btn { width: auto; margin-top: 0; padding: 0 16px; }
-    .msg { font-size: .85rem; margin-top: 8px; text-align: center; min-height: 1.2em; }
-    .ok { color: #16a34a; }
-    .ko { color: #dc2626; }
-    .quick { display: flex; gap: 6px; margin: 8px 0; }
-    .quick button { flex: 1; padding: 8px; border: none; border-radius: 8px; background: #e2e8f0; cursor: pointer; }
-    table { width: 100%; border-collapse: collapse; font-size: .9rem; }
-    td { padding: 7px 4px; border-bottom: 1px solid #e2e8f0; }
-    td:last-child { text-align: right; font-weight: 600; }
-    ul { margin: 0; padding-left: 18px; font-size: .9rem; color: #334155; }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Sarf - Taux de change</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #1c2430;
+    --paper: #eef1f5;
+    --card: #ffffff;
+    --line: #d3dae4;
+    --muted: #5d6a7d;
+    --night: #101722;
+    --night-line: #2c3a4f;
+    --indigo: #1a1035;
+    --indigo-2: #271b4d;
+    --indigo-line: #3a2c66;
+    --coral: #ff6f59;
+    --sun: #ffd23f;
+    --mint: #3ee0c0;
+    --lilac: #a78bfa;
+    --sky: #38bdf8;
+    --pink: #f472b6;
+    --soft: #c9bfe6;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; min-height: 100%; }
+  body {
+    font-family: "Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
+    background: var(--paper); color: var(--ink);
+    -webkit-font-smoothing: antialiased;
+  }
+  :focus-visible { outline: 3px solid var(--sky); outline-offset: 2px; }
+
+  .screen { display: none; min-height: 100vh; padding: 28px 16px 110px; }
+  .screen.active { display: block; }
+  .screen.premium { background: var(--indigo); color: #f5f1ff; }
+  .page { max-width: 440px; margin: 0 auto; }
+
+  h1 {
+    font-family: "Fraunces", Georgia, serif; font-weight: 600;
+    font-size: 2rem; line-height: 1.1; margin: 0 0 6px; letter-spacing: -.01em;
+  }
+  .lead { color: var(--muted); margin: 0 0 22px; font-size: .98rem; line-height: 1.5; }
+
+  /* ---------- Convertisseur (gratuit) ---------- */
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 20px; }
+  label { display: block; font-size: .85rem; color: var(--muted); margin: 14px 0 6px; }
+  input, select {
+    width: 100%; padding: 12px; font: inherit; font-size: 1rem;
+    color: var(--ink); background: #fff;
+    border: 1px solid var(--line); border-radius: 10px;
+  }
+  .row { display: flex; gap: 8px; align-items: flex-end; }
+  .row > div { flex: 1; min-width: 0; }
+  .swap {
+    flex: 0 0 auto; width: 46px; height: 46px; border-radius: 10px;
+    border: 1px solid var(--line); background: #fff; color: var(--ink);
+    font-size: 1.1rem; cursor: pointer;
+  }
+  .result { margin-top: 20px; padding: 16px; border-radius: 12px; background: #f5f8fc; }
+  .result strong {
+    display: block; margin-top: 4px;
+    font-family: "Fraunces", Georgia, serif; font-size: 1.9rem; font-weight: 600;
+  }
+  .small { font-size: .82rem; color: var(--muted); margin-top: 8px; }
+  .ok { color: #15803d; }
+  .ko { color: #b91c1c; }
+
+  /* ---------- Premium : arche, ticket, liste ---------- */
+  .hero {
+    background: var(--coral); color: var(--indigo);
+    margin-top: 8px; padding: 40px 24px 70px; text-align: center;
+    border-radius: 999px 999px 28px 28px / 180px 180px 28px 28px;
+  }
+  .premium h1 { color: var(--indigo); font-size: 2.6rem; margin-bottom: 4px; }
+  .price-big {
+    font-family: "Fraunces", Georgia, serif; font-size: 3.6rem; font-weight: 600;
+    line-height: 1; margin: 8px 0 12px;
+  }
+  .hero-lead { margin: 0 auto; max-width: 300px; font-size: .98rem; line-height: 1.45; opacity: .85; }
+
+  .ticket {
+    position: relative; margin: -42px 8px 0; padding: 22px 20px;
+    background: var(--sun); color: var(--indigo); border-radius: 26px;
+  }
+  .ticket::before, .ticket::after {
+    content: ""; position: absolute; top: 50%; width: 26px; height: 26px;
+    border-radius: 50%; background: var(--indigo); transform: translateY(-50%);
+  }
+  .ticket::before { left: -13px; }
+  .ticket::after { right: -13px; }
+  .ticket label { color: rgba(26, 16, 53, .75); margin-top: 0; }
+  .ticket input { background: #fff; color: var(--indigo); border-color: transparent; }
+
+  .code-row { display: flex; gap: 8px; }
+  .code-row input { flex: 1; min-width: 0; text-transform: uppercase; }
+
+  .btn {
+    display: block; width: 100%; padding: 13px; margin-top: 12px;
+    border: 0; border-radius: 14px; font: inherit; font-weight: 700; font-size: 1rem;
+    text-align: center; text-decoration: none; cursor: pointer;
+  }
+  .btn-ink { background: var(--indigo); color: #fff; }
+  .btn-mint { background: var(--mint); color: var(--indigo); }
+  .code-row .btn { width: auto; margin: 0; padding: 0 18px; }
+  .msg { min-height: 1.3em; margin-top: 10px; font-size: .9rem; text-align: center; font-weight: 600; }
+
+  .panel { background: var(--indigo-2); border-radius: 24px; padding: 20px; margin-top: 16px; }
+  .premium label { color: var(--soft); }
+  .panel input { background: #140c2b; color: #fff; border-color: var(--indigo-line); }
+  .panel .btn-mint { margin-top: 0; }
+
+  .pills { display: flex; gap: 8px; margin-top: 10px; }
+  .pill {
+    flex: 1; padding: 10px 0; border: 0; border-radius: 999px;
+    font: inherit; font-weight: 700; color: var(--indigo); cursor: pointer;
+  }
+  .pill:nth-child(1) { background: var(--mint); }
+  .pill:nth-child(2) { background: var(--sun); }
+  .pill:nth-child(3) { background: var(--lilac); }
+  .pill:nth-child(4) { background: var(--coral); }
+  .base { font-size: .85rem; color: var(--soft); margin-top: 12px; }
+
+  .section-title {
+    font-family: "Fraunces", Georgia, serif; font-weight: 600; font-size: 1.3rem;
+    margin: 26px 4px 12px;
+  }
+  .search {
+    border-radius: 999px; padding: 12px 18px; margin-bottom: 10px;
+    background: var(--indigo-2); color: #fff; border-color: var(--indigo-line);
+  }
+  .search::placeholder { color: #8f80b3; }
+  .cur-list { background: var(--indigo-2); border-radius: 24px; padding: 6px 18px; }
+  .cur-row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 13px 0; border-bottom: 1px solid var(--indigo-line);
+  }
+  .cur-row:last-child { border-bottom: 0; }
+  .dot { width: 12px; height: 12px; border-radius: 50%; flex: 0 0 auto; }
+  .cur-name { flex: 1; min-width: 0; font-size: .95rem; }
+  .cur-name b { font-family: "Fraunces", Georgia, serif; font-size: 1.05rem; margin-right: 8px; }
+  .cur-val { font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .cur-empty { padding: 16px 0; text-align: center; color: var(--soft); }
+
+  .hist { margin: 0; padding: 0; list-style: none; }
+  .hist li {
+    background: var(--indigo); color: #e6def7; border-radius: 999px;
+    padding: 10px 16px; margin-bottom: 8px; font-size: .92rem;
+  }
+
+  /* ---------- Barre de navigation basse ---------- */
+  .tabbar {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 10;
+    display: grid; grid-template-columns: repeat(2, 1fr);
+    background: var(--night); border-top: 1px solid var(--night-line);
+    padding: 8px 8px calc(8px + env(safe-area-inset-bottom, 0px));
+  }
+  .tab {
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+    padding: 6px 0; background: none; border: 0; cursor: pointer;
+    color: #8a96a8; font: inherit; font-size: .8rem;
+  }
+  .tab svg {
+    width: 26px; height: 26px; fill: none; stroke: currentColor;
+    stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round;
+  }
+  .tab.on { color: var(--sun); }
+</style>
 </head>
 <body>
 
-  <!-- Convertisseur (gratuit) -->
-  <div class="card">
-    <h1>💱 Convertisseur de devises</h1>
+<!-- ============ PAGE 1 : convertisseur (gratuit) ============ -->
+<section class="screen active" id="page1">
+  <div class="page">
+    <h1>Sarf</h1>
+    <p class="lead">Convertisseur de devises, taux du jour pour tous les pays.</p>
 
-    <label for="amount">Montant</label>
-    <input type="number" id="amount" value="1" min="0" step="any">
+    <div class="card">
+      <label for="amount">Montant</label>
+      <input type="number" id="amount" value="1" min="0" step="any">
 
-    <div class="row">
-      <div>
-        <label for="from">De</label>
-        <select id="from"></select>
+      <div class="row">
+        <div>
+          <label for="from">De</label>
+          <select id="from"></select>
+        </div>
+        <button class="swap" id="swap" title="Inverser" aria-label="Inverser les devises">⇄</button>
+        <div>
+          <label for="to">Vers</label>
+          <select id="to"></select>
+        </div>
       </div>
-      <button id="swap" title="Inverser">⇄</button>
-      <div>
-        <label for="to">Vers</label>
-        <select id="to"></select>
-      </div>
+
+      <div class="result" id="result" aria-live="polite">Chargement des taux...</div>
+      <div class="small" id="rate"></div>
+      <div class="small" id="names"></div>
+      <div class="small" id="updated"></div>
+      <div class="small" id="lockNote" hidden>🔒 Les autres devises sont réservées à Premium. Débloque-les dans l'onglet Premium.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ PAGE 2 : Premium (paiement + code) ============ -->
+<section class="screen premium" id="page2">
+  <div class="page">
+    <div class="hero">
+      <h1>Premium</h1>
+      <div class="price-big">1 DH</div>
+      <p class="hero-lead">Toutes les devises, montants rapides et historique de tes conversions.</p>
     </div>
 
-    <div class="result" id="result">Chargement des taux...</div>
-    <div class="rate" id="rate"></div>
-    <div class="updated" id="updated"></div>
-  </div>
-
-  <!-- Premium -->
-  <div class="card">
-    <!-- Verrouillé : paiement + code -->
-    <div id="lockedBox">
-      <h2>⭐ Premium <span class="badge">1 DH</span></h2>
-      <p class="lock-text">Quantités rapides, devises populaires et historique des conversions.</p>
-      <a class="btn btn-pay" id="payBtn" target="_blank" rel="noopener">💳 Payer par carte bancaire</a>
+    <div class="ticket">
+      <a class="btn btn-ink" id="payBtn" target="_blank" rel="noopener">💳 Payer par carte bancaire</a>
 
       <label for="code">Code d'activation (reçu après paiement)</label>
       <div class="code-row">
-        <input id="code" placeholder="PRM-XXXX-XXXX" autocomplete="off">
-        <button class="btn btn-main" id="activate">Activer</button>
+        <input id="code" placeholder="PRM-XXXX-XXXX" autocomplete="off" autocapitalize="characters" spellcheck="false">
+        <button class="btn btn-mint" id="activate">Activer</button>
       </div>
-      <div class="msg" id="codeMsg"></div>
-    </div>
-
-    <!-- Déverrouillé -->
-    <div id="premiumBox" class="hidden">
-      <h2>⭐ Premium <span class="badge">ACTIF ✅</span></h2>
-
-      <div class="quick">
-        <button data-amt="1">1</button>
-        <button data-amt="10">10</button>
-        <button data-amt="100">100</button>
-        <button data-amt="1000">1000</button>
-      </div>
-
-      <label>Devises populaires</label>
-      <table><tbody id="table"></tbody></table>
-
-      <button class="btn btn-light" id="save">➕ Garder cette conversion</button>
-
-      <label>Historique</label>
-      <ul id="history"><li>Pas encore de conversions gardées</li></ul>
+      <div class="msg" id="codeMsg" aria-live="polite"></div>
     </div>
   </div>
+</section>
+
+<!-- ============ PAGE 3 : Premium (après code valide) ============ -->
+<section class="screen premium" id="page3">
+  <div class="page">
+    <div class="hero">
+      <h1>Premium</h1>
+      <p class="hero-lead">Accès activé. Toutes les devises sont débloquées.</p>
+    </div>
+
+    <div class="panel">
+      <label for="amount3">Montant</label>
+      <input type="number" id="amount3" value="1" min="0" step="any">
+      <div class="pills">
+        <button class="pill" data-amt="1">1</button>
+        <button class="pill" data-amt="10">10</button>
+        <button class="pill" data-amt="100">100</button>
+        <button class="pill" data-amt="1000">1000</button>
+      </div>
+      <div class="base" id="base"></div>
+    </div>
+
+    <h2 class="section-title">Toutes les devises</h2>
+    <input type="search" id="search" class="search" placeholder="Chercher un pays ou une devise">
+    <div class="cur-list" id="list"></div>
+
+    <div class="panel">
+      <button class="btn btn-mint" id="save">Garder cette conversion</button>
+      <label>Historique</label>
+      <ul class="hist" id="history"><li>Pas encore de conversions gardées</li></ul>
+    </div>
+  </div>
+</section>
+
+<!-- ============ BARRE DE NAVIGATION BASSE ============ -->
+<nav class="tabbar" aria-label="Navigation principale">
+  <button class="tab" data-go="page1">
+    <svg viewBox="0 0 24 24"><path d="M4 8h14"/><path d="M14 4l4 4-4 4"/><path d="M20 16H6"/><path d="M10 12l-4 4 4 4"/></svg>
+    Convertir
+  </button>
+  <button class="tab" data-go="page3">
+    <svg viewBox="0 0 24 24"><path d="M12 3.5l2.6 5.3 5.8.8-4.2 4.1 1 5.8L12 16.9l-5.2 2.6 1-5.8-4.2-4.1 5.8-.8z"/></svg>
+    Premium
+  </button>
+</nav>
 
 <script>
+  // ---------- Réglages ----------
   const API_URL = "https://open.er-api.com/v6/latest/USD";
-  const PAYMENT_URL = "https://VOTRE-LIEN-DE-PAIEMENT"; // ← ton lien Stripe / CMI / PayPal
+  const PAYMENT_URL = "https://VOTRE-LIEN-DE-PAIEMENT"; // ← ton lien de paiement carte
   const VALID_HASHES = [
-    // "hash_du_code_1",  ← ajoute les hash ici (voir étape 2)
+    "c602eb6f284b8fee842d490972babc24ab9b3b1c2e595bb55c09121e92646bbf",
+    "05d8770e63b7075ab5234a264460bf885317d4ce28a5c416fc682e8ee64dd61e",
+    "9429e7afcbe24c767517d63859f7f8b1646457ec0a636a3d8d5459353aa5f45a",
+    "a6961780380e99329906bb94b39237f20f856e4c57a70ff8fbf18df4d52e9839",
+    "5c5254d3edf377be50e00de11985cddbc434ae33a46b79a4133ab712bb6cefcb"
   ];
-  const STORAGE_KEY = "premium_code_hash";
-  const POPULAR = ["MAD", "EUR", "USD", "GBP", "SAR", "AED", "TRY", "CAD", "CHF", "CNY", "JPY", "DZD"];
+  const STORAGE_KEY = "premium_hash";
+  // Devises disponibles sans Premium (les autres sont 🔒)
+  const FREE_CURRENCIES = ["MAD", "USD", "EUR", "GBP", "AED", "SAR"];
+  const TILE_COLORS = ["var(--coral)", "var(--sun)", "var(--mint)", "var(--lilac)", "var(--sky)", "var(--pink)"];
 
+  // Devise -> pays (code ISO)
+  const COUNTRY = {
+    AED:'AE',AFN:'AF',ALL:'AL',AMD:'AM',ANG:'CW',AOA:'AO',ARS:'AR',AUD:'AU',AWG:'AW',AZN:'AZ',
+    BAM:'BA',BBD:'BB',BDT:'BD',BGN:'BG',BHD:'BH',BIF:'BI',BMD:'BM',BND:'BN',BOB:'BO',BRL:'BR',BSD:'BS',BTN:'BT',BWP:'BW',BYN:'BY',BZD:'BZ',
+    CAD:'CA',CDF:'CD',CHF:'CH',CLP:'CL',CNY:'CN',COP:'CO',CRC:'CR',CUP:'CU',CVE:'CV',CZK:'CZ',
+    DJF:'DJ',DKK:'DK',DOP:'DO',DZD:'DZ',
+    EGP:'EG',ERN:'ER',ETB:'ET',
+    FJD:'FJ',FKP:'FK',FOK:'FO',
+    GBP:'GB',GEL:'GE',GGP:'GG',GHS:'GH',GIP:'GI',GMD:'GM',GNF:'GN',GTQ:'GT',GYD:'GY',
+    HKD:'HK',HNL:'HN',HRK:'HR',HTG:'HT',HUF:'HU',
+    IDR:'ID',ILS:'IL',IMP:'IM',INR:'IN',IQD:'IQ',IRR:'IR',ISK:'IS',
+    JEP:'JE',JMD:'JM',JOD:'JO',JPY:'JP',
+    KES:'KE',KGS:'KG',KHR:'KH',KID:'KI',KMF:'KM',KRW:'KR',KWD:'KW',KYD:'KY',KZT:'KZ',
+    LAK:'LA',LBP:'LB',LKR:'LK',LRD:'LR',LSL:'LS',LYD:'LY',
+    MAD:'MA',MDL:'MD',MGA:'MG',MKD:'MK',MMK:'MM',MNT:'MN',MOP:'MO',MRU:'MR',MUR:'MU',MVR:'MV',MWK:'MW',MXN:'MX',MYR:'MY',MZN:'MZ',
+    NAD:'NA',NGN:'NG',NIO:'NI',NOK:'NO',NPR:'NP',NZD:'NZ',
+    OMR:'OM',PAB:'PA',PEN:'PE',PGK:'PG',PHP:'PH',PKR:'PK',PLN:'PL',PYG:'PY',
+    QAR:'QA',RON:'RO',RSD:'RS',RUB:'RU',RWF:'RW',
+    SAR:'SA',SBD:'SB',SCR:'SC',SDG:'SD',SEK:'SE',SGD:'SG',SHP:'SH',SLE:'SL',SLL:'SL',SOS:'SO',SRD:'SR',SSP:'SS',STN:'ST',SYP:'SY',SZL:'SZ',
+    THB:'TH',TJS:'TJ',TMT:'TM',TND:'TN',TOP:'TO',TRY:'TR',TTD:'TT',TVD:'TV',TWD:'TW',TZS:'TZ',
+    UAH:'UA',UGX:'UG',USD:'US',UYU:'UY',UZS:'UZ',
+    VES:'VE',VND:'VN',VUV:'VU',
+    WST:'WS',XPF:'PF',YER:'YE',ZAR:'ZA',ZMW:'ZM',ZWL:'ZW'
+  };
+  // Cas particuliers (zones, pas un seul pays)
+  const SPECIAL = {
+    EUR: "Zone euro",
+    XAF: "Zone CEMAC",
+    XOF: "Zone UEMOA",
+    XCD: "Caraïbes orientales",
+    XDR: "DTS (FMI)"
+  };
+
+  // ---------- Outils ----------
   const $ = id => document.getElementById(id);
-  const names = new Intl.DisplayNames(['fr'], { type: 'currency' });
+  const regionNames = new Intl.DisplayNames(['fr'], { type: 'region' });
+  const currencyNames = new Intl.DisplayNames(['fr'], { type: 'currency' });
   const fmt = n => n.toLocaleString('fr-FR', { maximumSignificantDigits: 6 });
-  const rate = (from, to) => rates[to] / rates[from];
-  const amount = () => parseFloat($('amount').value) || 0;
+
+  const countryOf = code => {
+    if (SPECIAL[code]) return SPECIAL[code];
+    try { return regionNames.of(COUNTRY[code]); } catch {}
+    try { return currencyNames.of(code); } catch { return code; }
+  };
+  const label = code => `${countryOf(code)} (${code})`;
 
   let rates = {};
+  let allCodes = [];
   let history = [];
   let unlocked = false;
   try { unlocked = VALID_HASHES.includes(localStorage.getItem(STORAGE_KEY)); } catch {}
 
-  async function sha256(text) {
-    const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text.trim().toUpperCase()));
-    return [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, '0')).join('');
+  const isFree = code => unlocked || FREE_CURRENCIES.includes(code);
+  const amount = () => parseFloat($('amount').value) || 0;
+  const rate = (from, to) => rates[to] / rates[from];
+
+  // ---------- Navigation ----------
+  function show(id) {
+    if (id === 'page3' && !unlocked) id = 'page2';
+    document.querySelectorAll('.screen').forEach(s => s.classList.toggle('active', s.id === id));
+    const group = id === 'page2' ? 'page3' : id;
+    document.querySelectorAll('.tab').forEach(t => t.classList.toggle('on', t.dataset.go === group));
+    window.scrollTo(0, 0);
+    if (id === 'page3') updatePremium();
   }
 
-  // ---------- Convertisseur (gratuit) ----------
+  // ---------- Liste des devises (verrouillées 🔒 si pas Premium) ----------
+  function buildOptions() {
+    if (!Object.keys(rates).length) return;
+    allCodes = Object.keys(rates).sort((a, b) => countryOf(a).localeCompare(countryOf(b), 'fr'));
+    const html = allCodes.map(c => {
+      const locked = !isFree(c);
+      return `<option value="${c}"${locked ? ' disabled' : ''}>${label(c)}${locked ? ' 🔒' : ''}</option>`;
+    }).join('');
+    const f = $('from').value || 'USD';
+    const t = $('to').value || 'MAD';
+    $('from').innerHTML = html;
+    $('to').innerHTML = html;
+    $('from').value = f;
+    $('to').value = t;
+    $('lockNote').hidden = unlocked;
+  }
+
+  // ---------- Convertisseur ----------
   async function loadRates() {
     try {
       const res = await fetch(API_URL);
       const data = await res.json();
-      if (data.result !== "success") throw new Error();
+      if (data.result !== 'success') throw new Error();
       rates = data.rates;
-
-      const options = Object.keys(rates).sort().map(code => {
-        let name = "";
-        try { name = " - " + names.of(code); } catch {}
-        return `<option value="${code}">${code}${name}</option>`;
-      }).join("");
-
-      $('from').innerHTML = options;
-      $('to').innerHTML = options;
-      $('from').value = "USD";
-      $('to').value = "MAD";
-      $('updated').textContent = "Dernière mise à jour : " + data.time_last_update_utc;
+      buildOptions();
+      $('updated').textContent = 'Taux mis à jour : ' + data.time_last_update_utc;
       convert();
     } catch {
-      $('result').innerHTML = '<span class="ko">Erreur de connexion. Vérifie internet.</span>';
+      $('result').innerHTML = '<span class="ko">Erreur de connexion. Vérifie ton internet.</span>';
     }
   }
 
   function convert() {
     if (!Object.keys(rates).length) return;
-    const from = $('from').value, to = $('to').value, amt = amount();
-    $('result').innerHTML = `${fmt(amt)} ${from} = <strong>${fmt(amt * rate(from, to))} ${to}</strong>`;
-    $('rate').textContent = `1 ${from} = ${fmt(rate(from, to))} ${to}`;
+    const from = $('from').value, to = $('to').value, amt = amount(), r = rate(from, to);
+    $('result').innerHTML = `${fmt(amt)} ${from} = <strong>${fmt(amt * r)} ${to}</strong>`;
+    $('rate').textContent = `1 ${from} = ${fmt(r)} ${to}`;
+    $('names').textContent = `${countryOf(from)} vers ${countryOf(to)}`;
     if (unlocked) updatePremium();
   }
 
-  // ---------- Premium ----------
-  function refreshPremium() {
-    $('lockedBox').classList.toggle('hidden', unlocked);
-    $('premiumBox').classList.toggle('hidden', !unlocked);
-    if (unlocked) updatePremium();
+  // ---------- Premium : toutes les devises ----------
+  function setAmount(v) {
+    $('amount').value = v;
+    $('amount3').value = v;
+    convert();
   }
 
   function updatePremium() {
-    if (!Object.keys(rates).length) return;
+    if (!allCodes.length) return;
+    $('base').textContent = `Base : ${label($('from').value)}`;
+    renderList();
+  }
+
+  function renderList() {
+    if (!allCodes.length) return;
     const from = $('from').value, amt = amount();
-    $('table').innerHTML = POPULAR
-      .filter(c => rates[c] && c !== from)
-      .map(c => `<tr><td>${c}</td><td>${fmt(amt * rate(from, c))}</td></tr>`)
-      .join("");
+    const q = $('search').value.trim().toLowerCase();
+    const list = allCodes.filter(c => c !== from && `${c} ${countryOf(c)}`.toLowerCase().includes(q));
+    $('list').innerHTML = list.length
+      ? list.map((c, i) => `
+          <div class="cur-row">
+            <span class="dot" style="background:${TILE_COLORS[i % TILE_COLORS.length]}"></span>
+            <div class="cur-name"><b>${c}</b>${countryOf(c)}</div>
+            <div class="cur-val">${fmt(amt * rate(from, c))} ${c}</div>
+          </div>`).join('')
+      : '<div class="cur-empty">Aucune devise trouvée</div>';
   }
 
   function saveConversion() {
@@ -186,7 +427,13 @@
     const from = $('from').value, to = $('to').value, amt = amount();
     history.unshift(`${fmt(amt)} ${from} = ${fmt(amt * rate(from, to))} ${to}`);
     history = history.slice(0, 5);
-    $('history').innerHTML = history.map(h => `<li>${h}</li>`).join("");
+    $('history').innerHTML = history.map(h => `<li>${h}</li>`).join('');
+  }
+
+  // ---------- Code d'activation ----------
+  async function sha256(text) {
+    const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text.trim().toUpperCase()));
+    return [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, '0')).join('');
   }
 
   async function activate() {
@@ -196,40 +443,41 @@
       if (VALID_HASHES.includes(hash)) {
         unlocked = true;
         try { localStorage.setItem(STORAGE_KEY, hash); } catch {}
-        msg.className = "msg ok";
-        msg.textContent = "Premium activé ✅";
-        refreshPremium();
+        $('code').value = '';
+        msg.textContent = '';
+        buildOptions();
+        convert();
+        show('page3');
       } else {
-        msg.className = "msg ko";
-        msg.textContent = "Code invalide ❌";
+        msg.className = 'msg ko';
+        msg.textContent = 'Code invalide ❌';
       }
     } catch {
-      msg.className = "msg ko";
-      msg.textContent = "Erreur : essaie avec un navigateur plus récent.";
+      msg.className = 'msg ko';
+      msg.textContent = 'Erreur : ouvre le site en https.';
     }
   }
 
   // ---------- Événements ----------
-  $('amount').addEventListener('input', convert);
+  $('amount').addEventListener('input', () => { $('amount3').value = $('amount').value; convert(); });
+  $('amount3').addEventListener('input', () => { $('amount').value = $('amount3').value; convert(); });
   $('from').addEventListener('change', convert);
   $('to').addEventListener('change', convert);
   $('swap').addEventListener('click', () => {
-    const tmp = $('from').value;
+    const f = $('from').value;
     $('from').value = $('to').value;
-    $('to').value = tmp;
+    $('to').value = f;
     convert();
   });
-  document.querySelectorAll('.quick button').forEach(btn => {
-    btn.addEventListener('click', () => {
-      $('amount').value = btn.dataset.amt;
-      convert();
-    });
-  });
+  $('search').addEventListener('input', renderList);
+  document.querySelectorAll('[data-amt]').forEach(b => b.addEventListener('click', () => setAmount(b.dataset.amt)));
+  document.querySelectorAll('[data-go]').forEach(b => b.addEventListener('click', () => show(b.dataset.go)));
   $('save').addEventListener('click', saveConversion);
   $('activate').addEventListener('click', activate);
+  $('code').addEventListener('keydown', e => { if (e.key === 'Enter') activate(); });
   $('payBtn').href = PAYMENT_URL;
 
-  refreshPremium();
+  show('page1');
   loadRates();
 </script>
 </body>
