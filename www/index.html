@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>صلوات</title>
+  <style>
+    :root { --bg:#0f172a; --card:#1e293b; --accent:#22c55e; --text:#f1f5f9; --muted:#94a3b8; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: system-ui, "Segoe UI", Tahoma, sans-serif;
+      background: var(--bg); color: var(--text); min-height: 100vh;
+      padding: 20px 16px;
+      padding-top: calc(20px + env(safe-area-inset-top, 0px));
+      padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+    }
+    h1 { text-align: center; font-size: 1.3rem; }
+    #city { text-align: center; color: var(--muted); margin: 6px 0 24px; }
+    #now { text-align: center; font-size: 2.8rem; font-weight: 700; color: var(--accent);
+           direction: ltr; font-variant-numeric: tabular-nums; }
+    #nextPrayer { text-align: center; color: var(--muted); margin: 6px 0 24px; }
+    .card { display: flex; justify-content: space-between; align-items: center;
+            background: var(--card); border-radius: 16px; padding: 14px 18px; margin-bottom: 10px; }
+    .card.active { outline: 2px solid var(--accent); }
+    .time { direction: ltr; font-size: 1.2rem; font-variant-numeric: tabular-nums; }
+    button { width: 100%; margin-top: 18px; padding: 14px; border: 0; border-radius: 12px;
+             background: var(--accent); color: #052e16; font-size: 1rem; font-weight: 700; }
+    #err { color: #f87171; text-align: center; margin-top: 12px; }
+  </style>
+</head>
+<body>
+  <h1>مواقيت الصلاة</h1>
+  <div id="city">جاري تحديد الموقع...</div>
+  <div id="now">--:--:--</div>
+  <div id="nextPrayer"></div>
+  <div id="list"></div>
+  <button id="enableBtn">🔊 تفعيل صوت الأذان</button>
+  <div id="err"></div>
+
+  <audio id="adhan" src="adhan.mp3" preload="auto"></audio>
+
+  <script>
+    const PRAYERS = [
+      { key: 'Fajr',    name: 'الفجر',  adhan: true  },
+      { key: 'Sunrise', name: 'الشروق', adhan: false },
+      { key: 'Dhuhr',   name: 'الظهر',  adhan: true  },
+      { key: 'Asr',     name: 'العصر',  adhan: true  },
+      { key: 'Maghrib', name: 'المغرب', adhan: true  },
+      { key: 'Isha',    name: 'العشاء', adhan: true  },
+    ];
+    const METHOD = 21;  // 21 = المغرب (وزارة الأوقاف)
+    const DAYS = 7;
+
+    const $ = (id) => document.getElementById(id);
+    const pad = (n) => String(n).padStart(2, '0');
+    const P = window.Capacitor?.Plugins || {};
+    const adhanAudio = $('adhan');
+
+    let week = [];
+    const played = new Set();
+
+    const toDate = (hhmm, base) => {
+      const [h, m] = hhmm.split(':').map(Number);
+      const d = new Date(base);
+      d.setHours(h, m, 0, 0);
+      return d;
+    };
+
+    // 1) الموقع أوتوماتيك
+    async function getPosition() {
+      if (P.Geolocation) {
+        const perm = await P.Geolocation.requestPermissions();
+        if (perm.location !== 'granted') throw new Error('خاصك تعطي إذن الموقع للتطبيق');
+        const pos = await P.Geolocation.getCurrentPosition({ enableHighAccuracy: false, timeout: 15000 });
+        return pos.coords;
+      }
+      return new Promise((resolve, reject) =>
+        navigator.geolocation.getCurrentPosition(
+          (p) => resolve(p.coords),
+          () => reject(new Error('ما قدرناش نحددو الموقع')),
+          { timeout: 15000 }
+        )
+      );
+    }
+
+    // 2) اسم المدينة
+    async function getCity(lat, lng) {
+      try {
+        const r = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lng}&localityLanguage=ar`);
+        const d = await r.json();
+        return d.city || d.locality || d.principalSubdivision || 'موقعك';
+      } catch {
+        return 'موقعك';
+      }
+    }
+
+    // 3) مواقيت يوم معين
+    async function fetchDay(date, lat, lng) {
+      const ds = `${pad(date.getDate())}-${pad(date.getMonth() + 1)}-${date.getFullYear()}`;
+      const res = await fetch(`https://api.aladhan.com/v1/timings/${ds}?latitude=${lat}&longitude=${lng}&method=${METHOD}`);
+      const { data } = await res.json();
+      const t = {};
+      for (const k in data.timings) t[k] = data.timings[k].split(' ')[0];
+      return { date, t };
+    }
+
+    function buildList() {
+      $('list').innerHTML = PRAYERS.map((p) => `
+        <div class="card">
+          <span>${p.name}</span>
+          <span class="time">${week[0].t[p.key]}</span>
+        </div>`).join('');
+    }
+
+    // 4) العداد + تشغيل الأذان داخل التطبيق
+    function tick() {
+      if (!week.length) return;
+      const now = new Date();
+      const today = week[0];
+      const times = PRAYERS.map((p) => toDate(today.t[p.key], today.date));
+
+      let cur = -1;
+      times.forEach((at, i) => { if (at <= now) cur = i; });
+      document.querySelectorAll('.card').forEach((el, i) => el.classList.toggle('active', i === cur));
+
+      const nextIdx = times.findIndex((at) => at > now);
+      let nextAt, nextName;
+      if (nextIdx === -1) {
+        nextAt = toDate(week[1].t.Fajr, week[1].date);
+        nextName = PRAYERS[0].name;
+      } else {
+        nextAt = times[nextIdx];
+        nextName = PRAYERS[nextIdx].name;
+      }
+      const diff = nextAt - now;
+      const h = Math.floor(diff / 3600000);
+      const m = Math.floor(diff / 60000) % 60;
+      const s = Math.floor(diff / 1000) % 60;
+      $('now').textContent = `${pad(h)}:${pad(m)}:${pad(s)}`;
+      $('nextPrayer').textContent = `باقي حتى ${nextName}`;
+
+      PRAYERS.forEach((p, i) => {
+        if (!p.adhan) return;
+        const key = today.date.toDateString() + p.key;
+        if (now >= times[i] && now - times[i] < 60000 && !played.has(key)) {
+          played.add(key);
+          adhanAudio.play().catch(() => {});
+        }
+      });
+    }
+
+    // 5) الإشعارات بصوت الأذان (حتى التطبيق مسدود)
+    async function scheduleNotifications() {
+      const LN = P.LocalNotifications;
+      if (!LN) return;
+      const perm = await LN.requestPermissions();
+      if (perm.display !== 'granted') return;
+
+      await LN.createChannel({
+        id: 'adhan',
+        name: 'الأذان',
+        description: 'تنبيهات مواقيت الصلاة',
+        importance: 5,
+        visibility: 1,
+        sound: 'adhan',
+        vibration: true,
+      });
+
+      const { notifications: old } = await LN.getPending();
+      if (old.length) await LN.cancel({ notifications: old.map((n) => ({ id: n.id })) });
+
+      const items = [];
+      let id = 1;
+      for (const day of week) {
+        PRAYERS.forEach((p) => {
+          if (!p.adhan) return;
+          const at = toDate(day.t[p.key], day.date);
+          if (at > new Date()) {
+            items.push({
+              id: id++,
+              title: `حان وقت صلاة ${p.name}`,
+              body: 'الله أكبر',
+              channelId: 'adhan',
+              schedule: { at },
+            });
+          }
+        });
+      }
+      if (items.length) await LN.schedule({ notifications: items });
+    }
+
+    // 6) التشغيل
+    async function init() {
+      $('err').textContent = '';
+      try {
+        const { latitude: lat, longitude: lng } = await getPosition();
+        $('city').textContent = await getCity(lat, lng);
+
+        const days = Array.from({ length: DAYS }, (_, i) => {
+          const d = new Date();
+          d.setDate(d.getDate() + i);
+          return d;
+        });
+        week = await Promise.all(days.map((d) => fetchDay(d, lat, lng)));
+
+        buildList();
+        scheduleNotifications();
+      } catch (e) {
+        $('err').textContent = e.message;
+      }
+    }
+
+    // تفعيل الصوت (خاص ضغطة من المستخدم)
+    $('enableBtn').onclick = async () => {
+      try {
+        await adhanAudio.play();
+        adhanAudio.pause();
+        adhanAudio.currentTime = 0;
+        $('enableBtn').textContent = '✅ الصوت مفعل';
+      } catch {
+        $('err').textContent = 'ما قدرناش نفعلو الصوت، عاود ضغط الزر';
+      }
+    };
+
+    setInterval(tick, 1000);
+    setInterval(() => {
+      if (week[0] && week[0].date.toDateString() !== new Date().toDateString()) init();
+    }, 60000);
+    init();
+  </script>
+</body>
+</html>
