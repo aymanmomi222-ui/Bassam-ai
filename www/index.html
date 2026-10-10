@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>حاسبة المعدل</title>
+<style>
+:root{--bg:#F4F6FB;--card:#fff;--text:#2D3748;--navy:#1B2559;--muted:#8A94A6;--border:#E2E8F0;--head:#EDF2F7;--inp:#fff;--hdr:#1B2559;--off:#2D3A7A}
+body.dark{--bg:#121826;--card:#1e2638;--text:#cbd5e0;--navy:#e2e8f0;--border:#33405c;--head:#2a3550;--inp:#2b3652;--hdr:#0b1020;--off:#1B2559}
+*{box-sizing:border-box}[hidden]{display:none!important}
+body{margin:0;font-family:'Segoe UI',Tahoma,'Noto Sans Arabic',sans-serif;background:var(--bg);color:var(--text);font-size:14px}
+button,input,select{font-family:inherit;font-size:14px}
+label{font-weight:700}
+header{background:var(--hdr);color:#fff;text-align:center;padding:16px 12px}
+header h1{margin:0;font-size:22px}
+header p{margin:4px 0 10px;color:#A0AEC0;font-size:12px}
+nav{display:flex;flex-wrap:wrap;justify-content:center;gap:6px}
+nav button{background:var(--off);color:#fff;border:0;border-radius:8px;padding:7px 12px;font-weight:700;cursor:pointer}
+nav button.on{background:#00B3A4}
+.wrap{max-width:700px;margin:0 auto;padding:0 16px 40px}
+.ctl,.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.ctl{margin:14px 0 0}.row{margin:8px 0}
+select,input{background:var(--inp);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:7px}
+.btn{background:#00B3A4;color:#fff;border:0;border-radius:8px;padding:10px 14px;font-weight:700;cursor:pointer;white-space:nowrap}
+.btn.s{background:var(--border);color:var(--text)}
+.btn.n{background:var(--hdr);color:#fff}
+.btn.full{display:block;width:100%;margin:8px 0 4px}
+.bt{display:flex;gap:6px;margin:10px 0}.bt .main{flex:1}
+.card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px;margin:12px 0}
+.tbl{padding:8px}
+.pg{display:none}.pg.on{display:block}
+.hint{color:var(--muted);font-size:12px;text-align:center;margin:6px 0}
+.ln{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:6px 12px}
+.ln input{width:110px;text-align:center;font-size:18px;font-weight:700;color:var(--navy);padding:8px}
+.pcc{text-align:center;font-weight:700;color:#00B3A4;margin:6px 0}
+.hd,.rw{display:grid;grid-template-columns:1fr 72px 150px 34px;gap:6px;align-items:center}
+.hd{background:var(--head);color:var(--navy);font-weight:700;font-size:12px;padding:8px 6px;border-radius:6px;text-align:center}
+.rw{padding:3px 2px}.rw.alt{background:rgba(128,128,128,.08);border-radius:6px}
+.rw input{width:100%;min-width:0;text-align:center}.rw .nm{text-align:right}
+.x{background:none;border:0;color:#E53E3E;font-weight:700;cursor:pointer;font-size:15px}
+.bd{max-height:340px;overflow:auto}
+.res{text-align:center;padding:10px 14px}
+.av{font-size:36px;font-weight:800;color:var(--navy)}
+.mn{font-weight:700;color:var(--muted)}
+.bar{height:14px;background:var(--border);border-radius:7px;overflow:hidden;max-width:400px;margin:8px auto;direction:ltr}
+.fill{height:100%;width:0;background:#00B3A4;transition:width .3s}
+.det,.sum{font-size:13px;color:var(--muted);white-space:pre-line;margin-top:6px}
+.sum{color:var(--text);text-align:center}
+.b{display:flex;align-items:center;gap:8px;margin:6px 0}.b span{width:130px}
+.t{flex:1;background:var(--border);border-radius:6px;height:12px;overflow:hidden}.t i{display:block;height:100%}
+.b b{width:44px;text-align:left}
+.big{font-size:54px;font-weight:800;text-align:center}.m{text-align:center;font-size:20px;font-weight:700}
+.avg{text-align:center;font-size:20px;font-weight:700;margin-top:10px}
+table{width:100%;border-collapse:collapse}th{background:var(--head);color:var(--navy)}
+th,td{padding:8px;text-align:center;border-bottom:1px solid var(--border)}th:first-child,td:first-child{text-align:right}
+.ov{position:fixed;inset:0;background:rgba(0,0,0,.55);overflow:auto;padding:20px;z-index:8;display:none}.ov.on{display:block}
+.rpt{--bg:#F4F6FB;--card:#fff;--text:#2D3748;--navy:#1B2559;--muted:#8A94A6;--border:#E2E8F0;--head:#EDF2F7;--inp:#fff;max-width:760px;margin:0 auto;background:var(--bg);color:var(--text);border-radius:12px;overflow:hidden}
+.rh{background:#1B2559;color:#fff;text-align:center;padding:22px}.rh h1{margin:0 0 6px}
+.rb{padding:0 16px 16px}.np{display:flex;gap:8px;justify-content:flex-end;padding:10px 16px 0}
+#t{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--hdr);color:#fff;padding:10px 18px;border-radius:8px;display:none;z-index:20;white-space:pre-line;max-width:90%}
+@media print{body *{visibility:hidden}#ov,#ov *{visibility:visible}#ov{position:absolute;left:0;top:0;width:100%;background:none;padding:0;overflow:visible}.rpt{max-width:none}.np{display:none!important}*{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+</style>
+</head>
+<body>
+<header>
+<h1>🎓 حاسبة المعدل</h1>
+<p>المراقبة • الجهوي • الوطني • النهائي • الجامعة</p>
+<nav id="nav"></nav>
+</header>
+<div class="wrap">
+<div class="ctl">
+<span style="font-weight:700">المستوى الدراسي :</span>
+<select id="lvl"></select>
+<button class="btn" id="bSave">💾 حفظ</button>
+<button class="btn s" id="bTheme">🌙</button>
+<button class="btn n" id="bExp">📄 تصدير</button>
+</div>
+<section class="pg" id="p0"></section>
+<section class="pg" id="p1"></section>
+<section class="pg" id="p2"></section>
+<section class="pg" id="p3"></section>
+<section class="pg" id="p4"></section>
+</div>
+<div class="ov" id="ov"><div class="rpt" id="rep"><div class="np"><button class="btn s" id="rClose">✕ سد</button><button class="btn" id="rPrint">🖨️ طباعة / حفظ PDF</button></div><div id="rBody"></div></div></div>
+<div id="t"></div>
+<script>
+const $=(t,p={},...k)=>{const e=document.createElement(t);Object.assign(e,p);k.forEach(x=>e.append(x));return e};
+const $id=i=>document.getElementById(i);
+const KEY='moadil_data',KEYS=['cc','rg','ex'],TT=['النقطة /20 (المراقبة)','النقطة /20 (الجهوي)','النقطة /20 (الوطني)'],LBL=['📝 المراقبة','📚 الجهوي','🏫 الوطني','🏆 النهائي','🎓 الجامعة'];
+const UNI=[1,2,3,4,5,6].map(i=>`السداسي ${i}`),NO_TPL='— اختار قالب —';
+const PRESETS={
+"الإعدادي الأول":"اللغة العربية:3|اللغة الفرنسية:3|اللغة الإنجليزية:2|الاجتماعيات:2|التربية الإسلامية:1|الرياضيات:3|علوم الحياة والأرض:2|الفيزياء والكيمياء:2|المعلوميات:1|التربية البدنية:1",
+"الإعدادي الثاني":"اللغة العربية:3|اللغة الفرنسية:3|اللغة الإنجليزية:2|الاجتماعيات:2|التربية الإسلامية:1|الرياضيات:3|علوم الحياة والأرض:2|الفيزياء والكيمياء:2|المعلوميات:1|التربية البدنية:1",
+"الإعدادي الثالث":"اللغة العربية:3|اللغة الفرنسية:3|اللغة الإنجليزية:2|الاجتماعيات:2|التربية الإسلامية:1|الرياضيات:3|علوم الحياة والأرض:2|الفيزياء والكيمياء:2|المعلوميات:1|التربية البدنية:1",
+"الجذع المشترك":"الرياضيات:4|الفيزياء والكيمياء:3|علوم الحياة والأرض:2|اللغة العربية:2|اللغة الفرنسية:3|اللغة الإنجليزية:2|الاجتماعيات:2|التربية الإسلامية:1|المعلوميات:1",
+"الأولى باك علوم تجريبية":"الرياضيات:7|الفيزياء والكيمياء:5|علوم الحياة والأرض:5|الفلسفة:2|اللغة العربية:2|اللغة الفرنسية:3|اللغة الإنجليزية:2|التربية الإسلامية:1",
+"الثانية باك علوم فيزيائية":"الرياضيات:7|الفيزياء والكيمياء:7|علوم الحياة والأرض:5|الفلسفة:2|اللغة العربية:2|اللغة الفرنسية:4|اللغة الإنجليزية:2|التربية الإسلامية:2",
+"الثانية باك آداب":"اللغة العربية:4|الاجتماعيات:4|الفلسفة:4|اللغة الفرنسية:3|اللغة الإنجليزية:3|التربية الإسلامية:2",
+"مخصص (فارغ)":":1|:1|:1|:1|:1"};
+const TEMPLATES={
+"علوم (SMPC)":["الرياضيات 1 (التحليل):3|الفيزياء 1 (الميكانيك):3|الكيمياء 1 (الذرة):3|الإعلاميات 1:2|اللغة والمصطلحات:1","الرياضيات 2 (الجبر):3|الفيزياء 2 (الحرارة):3|الكيمياء 2 (المحاليل):3|الإعلاميات 2:2|المنهجية والتواصل:1","الرياضيات 3:3|الفيزياء 3 (الكهرباء):3|الكيمياء العضوية 1:3|الأشغال التطبيقية 1:2|اللغة الأجنبية:1","الميكانيك الكمي:3|البصريات:3|الكيمياء العضوية 2:3|الأشغال التطبيقية 2:2|الإنجليزية:1","وحدة تخصص 1:3|وحدة تخصص 2:3|وحدة تخصص 3:3|مشروع:2|لغة:1","وحدة تخصص 4:3|وحدة تخصص 5:3|وحدة تخصص 6:3|مشروع التخرج:3|لغة:1"],
+"حقوق":["مدخل لدراسة القانون:3|القانون الدستوري:3|تاريخ النظم:2|الاقتصاد السياسي:2|لغة أجنبية قانونية:1","القانون المدني (الالتزامات):3|القانون الإداري:3|علم السياسة:2|المالية العامة:2|لغة أجنبية:1","العقود الخاصة:3|القانون الجنائي العام:3|القانون التجاري:3|القانون الدولي العام:2|لغة:1","المسطرة المدنية:3|القانون الجنائي الخاص:3|قانون الشغل:2|الحقوق العينية:3|لغة:1","قانون الأسرة:3|المسطرة الجنائية:3|القانون الدولي الخاص:2|قانون الأعمال:3|لغة:1","وحدة تخصص 1:3|وحدة تخصص 2:3|وحدة تخصص 3:3|بحث / تدريب:2|لغة:1"],
+"اقتصاد وتدبير":["مدخل للاقتصاد:3|المحاسبة العامة 1:3|الرياضيات:2|مدخل للتدبير:2|اللغة والتواصل:1","الاقتصاد الجزئي:3|المحاسبة العامة 2:3|الإحصاء:2|مدخل للقانون:2|لغة أجنبية:1","الاقتصاد الكلي:3|محاسبة الشركات:3|التسويق:2|الإحصاء الوصفي:2|لغة:1","التحليل المالي:3|الاقتصاد النقدي:3|قانون الشركات:2|الاحتمالات:2|لغة:1","وحدة تخصص 1:3|وحدة تخصص 2:3|وحدة تخصص 3:3|بحث:2|لغة:1","وحدة تخصص 4:3|وحدة تخصص 5:3|وحدة تخصص 6:3|مشروع التخرج:3|لغة:1"]};
+const parse=s=>s.split('|').map(x=>{const i=x.lastIndexOf(':');return[x.slice(0,i),+x.slice(i+1)]});
+const f2=x=>(+x).toFixed(2),g=x=>+(+x).toPrecision(6);
+const num=s=>{const t=String(s).trim();return t===''?NaN:Number(t.replace(',','.'))};
+const mention=a=>a>=16?['ممتاز 🏆','#D69E2E']:a>=14?['حسن 🌟','#38A169']:a>=12?['مستحسن 👍','#00B3A4']:a>=10?['مقبول ✅','#F6993F']:['لم تحقق المعدل 😔','#E53E3E'];
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]);
+const bar=(l,v)=>`<div class="b"><span>${esc(l)}</span><div class="t"><i style="width:${Math.round(v/20*100)}%;background:${mention(v)[1]}"></i></div><b>${g(v)}</b></div>`;
+const btn=(t,c,f)=>$('button',{className:c,textContent:t,onclick:f});
+const bt=(...b)=>$('div',{className:'bt'},...b);
+let tmr;const toast=m=>{const t=$id('t');t.textContent=m;t.style.display='block';clearTimeout(tmr);tmr=setTimeout(()=>t.style.display='none',3500)};
+
+class Tbl{
+constructor(title){this.rows=[];this.el=$('div',{className:'card tbl'},$('div',{className:'hd'},$('span',{textContent:'المادة'}),$('span',{textContent:'المعامل'}),$('span',{textContent:title}),$('span')));this.bd=$('div',{className:'bd'});this.el.append(this.bd)}
+add(n='',c=1){this.rows.push({n,c:String(c),g:''});this.draw()}
+load(p){this.rows=p.map(([n,c])=>({n,c:String(c),g:''}));this.draw()}
+set(rs){this.rows=rs.map(([n,c,g])=>({n:String(n),c:String(c),g:String(g??'')}));this.draw()}
+dump(){return this.rows.map(r=>[r.n,r.c,r.g])}
+clear(){this.rows.forEach(r=>r.g='');this.draw()}
+draw(){this.bd.replaceChildren(...this.rows.map((r,i)=>$('div',{className:'rw'+(i%2?' alt':'')},
+ $('input',{className:'nm',value:r.n,oninput:e=>r.n=e.target.value}),
+ $('input',{value:r.c,inputMode:'decimal',oninput:e=>r.c=e.target.value}),
+ $('input',{value:r.g,placeholder:'—',inputMode:'decimal',oninput:e=>r.g=e.target.value}),
+ $('button',{className:'x',textContent:'✕',onclick:()=>{this.rows=this.rows.filter(q=>q!==r);this.draw()}}))))}
+average(){let tot=0,cf=0,n=0;for(const r of this.rows){const v=r.g.trim();if(!v)continue;const x=num(v),c=num(r.c.trim()||'1');if(isNaN(x)||isNaN(c))throw new Error(`قيمة غير صحيحة في مادة: ${r.n||'؟'}`);if(x<0||x>20)throw new Error('النقطة خاصها تكون بين 0 و 20');if(c<=0)throw new Error('المعامل خاصو يكون أكبر من 0');tot+=x*c;cf+=c;n++}return n?{avg:tot/cf,total:tot,coefs:cf,n}:null}
+}
+
+function Card(){const e=$('div',{className:'card res'});e.innerHTML='<div class="av"></div><div class="mn"></div><div class="bar"><div class="fill"></div></div><div class="det"></div>';
+const q=s=>e.querySelector(s),av=q('.av'),mn=q('.mn'),fill=q('.fill'),det=q('.det');
+const c={e,reset(){av.textContent='--.--';av.style.color='';mn.textContent='دخل النقط وضغط على احسب';mn.style.color='';det.textContent='';fill.style.width='0%'},
+show(a,d=''){const[t,col]=mention(a);av.textContent=f2(a);av.style.color=col;mn.textContent=t;mn.style.color=col;fill.style.background=col;fill.style.width=Math.min(100,a/20*100)+'%';det.textContent=d}};
+c.reset();return c}
+
+const S={level:'الثانية باك علوم فيزيائية',prev:'',store:{},vals:{cc:'',rg:'',ex:''},pct:{rg:'25',ex:'50'},dark:false,sem:UNI[0],cur:0,tb:{},cd:{},uni:{}};
+
+KEYS.forEach((k,i)=>{const p=$id('p'+i),t=new Tbl(TT[i]),c=Card();S.tb[k]=t;S.cd[k]=c;
+ p.append(t.el,bt(btn('🧮  احسب المعدل','btn main',()=>calcTable(k)),btn('➕ مادة','btn s',()=>t.add()),btn('🔄 مسح','btn s',()=>{t.clear();c.reset();S.vals[k]=''})),c.e)});
+
+const pCc=$('div',{className:'pcc'});
+const fIn=on=>$('input',{oninput:e=>on(e.target.value)});
+const fCc=fIn(v=>S.vals.cc=v),fRg=fIn(v=>S.vals.rg=v),fEx=fIn(v=>S.vals.ex=v);
+const pRg=fIn(v=>{S.pct.rg=v;updPct()}),pEx=fIn(v=>{S.pct.ex=v;updPct()});
+const line=(t,i)=>$('div',{className:'ln'},$('label',{textContent:t}),i);
+const fCard=Card();
+$id('p3').append($('div',{className:'card'},$('div',{className:'hint',textContent:'دخل المعدلات (كيتعمرو بوحدهم من الصفحات اللي قبل)'}),line('معدل المراقبة المستمرة /20',fCc),line('معدل الامتحان الجهوي /20',fRg),line('معدل الامتحان الوطني /20',fEx),$('div',{className:'hint',textContent:'النسب (المراقبة كتكمل لـ 100%)'}),line('نسبة الامتحان الجهوي %',pRg),line('نسبة الامتحان الوطني %',pEx),pCc,btn('🏆  احسب المعدل النهائي','btn full',calcFinal)),fCard.e);
+
+const semSel=$('select',{onchange:()=>{S.sem=semSel.value;showUni();uCard.reset()}});
+UNI.forEach(s=>semSel.append($('option',{value:s,textContent:s})));
+const tplSel=$('select',{onchange:()=>applyTpl(false)});
+tplSel.append($('option',{value:NO_TPL,textContent:NO_TPL}));Object.keys(TEMPLATES).forEach(k=>tplSel.append($('option',{value:k,textContent:k})));
+const uh=$('div');
+const defUni=()=>[1,2,3,4,5,6].map(i=>[`وحدة ${i}`,1]);
+UNI.forEach(s=>{const t=new Tbl('النقطة /20');t.load(defUni());S.uni[s]=t;uh.append(t.el)});
+const uCard=Card();
+const uSum=$('div',{className:'sum'});
+function showUni(){UNI.forEach(s=>S.uni[s].el.hidden=s!==S.sem)}
+$id('p4').append($('div',{className:'row'},$('label',{textContent:'السداسي :'}),semSel,$('span',{className:'hint',textContent:'المعامل = الكريديات ولا معامل الوحدة'})),
+ $('div',{className:'row'},$('label',{textContent:'قالب الوحدات :'}),tplSel,btn('📋 طبّقو على كل السداسيات','btn s',()=>applyTpl(true))),
+ uh,
+ bt(btn('🧮  احسب معدل السداسي','btn main',calcUni),btn('➕ وحدة','btn s',()=>S.uni[S.sem].add()),btn('🔄 مسح','btn s',clearUni)),
+ uCard.e,
+ $('div',{className:'card'},uSum,$('div',{className:'hint',textContent:'قواعد الاجتياز (النقطة الإقصائية والتعويض) كتختلف من كلية لأخرى'})));
+showUni();
+
+LBL.forEach((t,i)=>$id('nav').append(btn(t,'',()=>show(i))));
+Object.keys(PRESETS).forEach(k=>$id('lvl').append($('option',{value:k,textContent:k})));
+
+function calcTable(k){let r;try{r=S.tb[k].average()}catch(e){return toast(e.message)}
+ if(!r)return toast('دخل على الأقل نقطة وحدة 😉');
+ S.cd[k].show(r.avg,`مجموع النقط: ${f2(r.total)}  |  المعاملات: ${g(r.coefs)}  |  المواد: ${r.n}`);
+ S.vals[k]=f2(r.avg)}
+
+function calcUni(){const t=S.uni[S.sem];let r;try{r=t.average()}catch(e){return toast(e.message)}
+ if(!r)return toast('دخل على الأقل نقطة وحدة 😉');
+ const gs=t.rows.filter(x=>x.g.trim()).map(x=>num(x.g)),pass=gs.filter(x=>x>=10).length,low=gs.filter(x=>x<5).length;
+ const st=r.avg>=10&&!low?'السداسي مجتاز ✅':r.avg>=10?'المعدل ≥ 10 لكن كاين نقطة إقصائية (< 5) ⚠️':'السداسي غير مجتاز ❌ (الدورة الاستدراكية)';
+ uCard.show(r.avg,`وحدات مجتازة: ${pass}/${r.n}   |   نقط إقصائية (<5): ${low}\n${st}`);updSum()}
+
+function clearUni(){S.uni[S.sem].clear();uCard.reset();updSum()}
+
+function applyTpl(all){const k=tplSel.value;if(!TEMPLATES[k])return;const ss=all?UNI:[S.sem];
+ if(ss.some(s=>S.uni[s].rows.some(r=>r.g.trim()))&&!confirm('غادي تتمسح النقط اللي دخلتي فهاد السداسي/السداسيات.\nبغيتي تكمل؟'))return;
+ ss.forEach(s=>S.uni[s].load(parse(TEMPLATES[k][UNI.indexOf(s)])));uCard.reset();updSum()}
+
+function uniSum(){const sems={};for(const s of UNI){try{const r=S.uni[s].average();if(r)sems[s]=r}catch(e){}}
+ const years={};for(let y=0;y<3;y++){const a=sems[UNI[2*y]],b=sems[UNI[2*y+1]];if(a&&b)years[y+1]=(a.total+b.total)/(a.coefs+b.coefs)}
+ const v=Object.values(sems);const general=v.length?v.reduce((s,x)=>s+x.total,0)/v.reduce((s,x)=>s+x.coefs,0):null;
+ return{sems,years,general}}
+
+function updSum(){const{sems,years,general}=uniSum();const L=Object.entries(sems).map(([s,r])=>`${s}:  ${f2(r.avg)}   ${mention(r.avg)[0]}`);
+ for(const y in years)L.push(`📅 معدل السنة ${y}:  ${f2(years[y])}`);
+ if(general!=null)L.push(`🎓 المعدل العام:  ${f2(general)}  —  ${mention(general)[0]}`);
+ uSum.textContent=L.join('\n')||'كمّل النقط وضغط على احسب باش يبان الملخص هنا'}
+
+function computeFinal(silent){const w=m=>{if(!silent)toast(m)};
+ const rg=num(S.pct.rg),ex=num(S.pct.ex);if(isNaN(rg)||isNaN(ex)){w('دخل النسب بشكل صحيح 😉');return null}
+ const cc=100-rg-ex;if(Math.min(rg,ex,cc)<0){w('مجموع النسب خاصو ما يفوتش 100%');return null}
+ let fin=0;const used=[];
+ for(const[n,k,p]of[['المراقبة','cc',cc],['الجهوي','rg',rg],['الوطني','ex',ex]]){if(p===0)continue;
+  const v=num(S.vals[k]);if(isNaN(v)){w(`خاصك تعمر معدل ${n} 😉`);return null}
+  if(v<0||v>20){w('المعدلات خاصها تكون بين 0 و 20');return null}
+  fin+=v*p/100;used.push([n,v,p])}
+ return{fin,used}}
+
+function calcFinal(){const r=computeFinal();if(r)fCard.show(r.fin,r.used.map(([,v,p])=>`(${f2(v)}×${g(p)}%)`).join(' + ')+` = ${f2(r.fin)}`)}
+
+function updPct(){const a=num(S.pct.rg),b=num(S.pct.ex);if(isNaN(a)||isNaN(b)){pCc.textContent='';return}
+ const c=100-a-b;pCc.textContent=`نسبة المراقبة المستمرة: ${g(c)}%`;pCc.style.color=c>=0?'#00B3A4':'#E53E3E'}
+
+function syncFinal(){fCc.value=S.vals.cc;fRg.value=S.vals.rg;fEx.value=S.vals.ex;pRg.value=S.pct.rg;pEx.value=S.pct.ex;updPct()}
+
+function exportReport(){const parts=[];
+ const sec=KEYS.map((k,i)=>[['📝 المراقبة المستمرة','📚 الامتحان الجهوي','🏫 الامتحان الوطني'][i],S.tb[k]]).concat(UNI.map(s=>[`🎓 ${s}`,S.uni[s]]));
+ for(const[title,t]of sec){let r=null;try{r=t.average()}catch(e){}if(!r)continue;
+  let rows='',bars='';
+  for(const x of t.rows){if(!x.g.trim())continue;const gv=num(x.g),cv=num(x.c.trim()||'1');rows+=`<tr><td>${esc(x.n)}</td><td>${g(cv)}</td><td>${g(gv)}</td><td>${g(gv*cv)}</td></tr>`;bars+=bar(x.n,gv)}
+  parts.push(`<div class="card"><h3>${title}</h3><table><tr><th>المادة</th><th>المعامل</th><th>النقطة</th><th>النقطة × المعامل</th></tr>${rows}</table>${bars}<div class="avg">المعدل: ${f2(r.avg)} / 20</div></div>`)}
+ const U=uniSum();
+ if(U.general!=null){const[tx,col]=mention(U.general);parts.push(`<div class="card"><h3>🎓 الجامعة: المعدل العام</h3><div class="big" style="color:${col}">${f2(U.general)}</div><div class="m" style="color:${col}">${tx}</div>${Object.entries(U.sems).map(([s,v])=>bar(s,v.avg)).join('')}${Object.entries(U.years).map(([y,a])=>`<p class="avg">معدل السنة ${y}: ${f2(a)}</p>`).join('')}</div>`)}
+ const F=computeFinal(true);
+ if(F){const[tx,col]=mention(F.fin);parts.push(`<div class="card"><h3>🏆 المعدل النهائي</h3><div class="big" style="color:${col}">${f2(F.fin)}</div><div class="m" style="color:${col}">${tx}</div>${F.used.map(([n,v])=>bar(n,v)).join('')}<p dir="ltr" style="text-align:center;color:#8A94A6">${F.used.map(([,v,p])=>`(${f2(v)}×${g(p)}%)`).join(' + ')}</p></div>`)}
+ if(!parts.length)return toast('ما كاين حتى نقطة باش نصدرها 😉');
+ $id('rBody').innerHTML=`<div class="rh"><h1>🎓 تقرير المعدل</h1><div>${esc(S.prev)} • ${new Date().toLocaleDateString('en-GB')}</div></div><div class="rb">${parts.join('')}</div>`;
+ $id('ov').classList.add('on')}
+
+function show(i){S.cur=i;document.querySelectorAll('.pg').forEach((p,j)=>p.classList.toggle('on',j===i));
+ [...$id('nav').children].forEach((b,j)=>b.classList.toggle('on',j===i));
+ if(i===3)syncFinal();if(i===4)updSum()}
+
+function runCur(){S.cur===4?calcUni():S.cur===3?calcFinal():calcTable(KEYS[S.cur])}
+
+function setDark(on){S.dark=on;document.body.classList.toggle('dark',on);$id('bTheme').textContent=on?'☀️':'🌙'}
+
+const snap=()=>({cc:S.tb.cc.dump(),rg:S.tb.rg.dump(),ex:S.tb.ex.dump(),vars:[S.vals.cc,S.vals.rg,S.vals.ex],pct:{...S.pct},sem:S.sem,uni:Object.fromEntries(UNI.map(s=>[s,S.uni[s].dump()]))});
+
+function applyLevel(lv){let st=S.store[lv];
+ try{KEYS.forEach(k=>S.tb[k].set(st[k]))}catch(e){st=null;KEYS.forEach(k=>S.tb[k].load(parse(PRESETS[lv])))}
+ KEYS.forEach(k=>S.cd[k].reset());fCard.reset();
+ const v=st&&Array.isArray(st.vars)?st.vars:['','',''];S.vals={cc:v[0],rg:v[1],ex:v[2]};
+ S.pct=st&&st.pct?{...st.pct}:{rg:'25',ex:'50'};
+ UNI.forEach(s=>{try{S.uni[s].set(st.uni[s])}catch(e){S.uni[s].load(defUni())}});
+ S.sem=st&&UNI.includes(st.sem)?st.sem:UNI[0];semSel.value=S.sem;showUni();uCard.reset();updSum()}
+
+function save(quiet){S.store[S.prev]=snap();
+ const d={level:S.prev,dark:S.dark,store:S.store};
+ try{localStorage.setItem(KEY,JSON.stringify(d));if(!quiet)toast('تم حفظ النقط ✅')}catch(e){if(!quiet)toast('ما قدرتش نحفظ')}}
+
+$id('lvl').onchange=()=>{S.store[S.prev]=snap();S.prev=$id('lvl').value;applyLevel(S.prev)};
+$id('bSave').onclick=()=>save(false);
+$id('bTheme').onclick=()=>setDark(!S.dark);
+$id('bExp').onclick=exportReport;
+$id('rClose').onclick=()=>$id('ov').classList.remove('on');
+$id('rPrint').onclick=()=>window.print();
+$id('ov').onclick=e=>{if(e.target.id==='ov')$id('ov').classList.remove('on')};
+addEventListener('pagehide',()=>save(true));
+document.addEventListener('visibilitychange',()=>{if(document.hidden)save(true)});
+document.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.tagName==='INPUT'&&!$id('ov').classList.contains('on'))runCur()});
+
+let D={};try{D=JSON.parse(localStorage.getItem(KEY))||{}}catch(e){}
+const ren=k=>k==='الإعدادي'?'الإعدادي الأول':k;
+S.store={};for(const k in D.store||{})S.store[ren(k)]=D.store[k];
+const lv=ren(D.level);if(PRESETS[lv])S.level=lv;
+if(D.uni&&S.store[S.level]&&!S.store[S.level].uni)Object.assign(S.store[S.level],{uni:D.uni,sem:D.uni_sem,pct:{rg:D.pct_rg??'25',ex:D.pct_ex??'50'}});
+$id('lvl').value=S.level;S.prev=S.level;applyLevel(S.level);
+setDark(!!D.dark);show(0);
+</script>
+</body>
+</html>
