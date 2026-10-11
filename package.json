@@ -1,6 +1,6 @@
 {
-  "name": "salawat",
-  "version": "1.0.0",
+  "name": "transfer money",
+  "version": "2.0.0",
   "private": true,
   "dependencies": {
     "@capacitor/core": "^6.0.0",
